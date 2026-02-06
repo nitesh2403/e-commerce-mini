@@ -1,0 +1,101 @@
+Module 1: User Authentication and Authorization
+
+Purpose:
+User identity management and role separation.
+
+Implementation:
+
+User registration and login
+
+Role-based access (Admin, Customer)
+
+Token-based authentication
+
+Module 2: Product and Inventory Management
+
+Purpose:
+Management of core business data.
+
+Implementation:
+
+Add, update, and delete products
+
+Manage stock quantity
+
+Identify low-stock products
+
+Product search and filtering
+
+Key Rules:
+
+Stock quantity must never be negative
+
+Product price stored once
+
+Module 3: Cart Management
+
+Purpose:
+Temporary staging of customer orders.
+
+Implementation:
+
+Add product to cart
+
+Update cart quantity
+
+Remove product from cart
+
+View cart summary
+
+Key Rules:
+
+Cart and order are separate entities
+
+Stock is not reduced at cart stage
+
+Module 4: Order Processing
+
+Purpose:
+Execution of business-critical order workflow.
+
+Implementation:
+
+Place order
+
+Validate stock availability
+
+Calculate total amount
+
+Create order and order items
+
+Update inventory atomically
+
+Order Lifecycle:
+
+Placed → Shipped → Delivered
+
+Module 5: Admin Order Management
+
+Purpose:
+Administrative control over order handling.
+
+Implementation:
+
+View all orders
+
+Update order status
+
+Enforce valid order state transitions
+
+Module 6: Reports and Analytics
+
+Purpose:
+Business monitoring and decision support.
+
+Implementation:
+
+Daily and monthly sales reports
+
+Low-stock inventory reports
+
+Orders grouped by status

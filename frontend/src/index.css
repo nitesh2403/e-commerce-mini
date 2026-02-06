@@ -1,0 +1,103 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+:root {
+  --color-gold: #D4AF37;
+  --color-gold-hover: #b5952f;
+  --color-dark-bg: #0F0F0F;
+  --color-dark-card: #18181B;
+  --color-text-main: #FFFFFF;
+  --color-text-muted: #A1A1AA;
+}
+
+body {
+  background-color: var(--color-dark-bg);
+  color: var(--color-text-main);
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6, .font-serif {
+  font-family: 'Playfair Display', serif;
+}
+
+.theme-card {
+  background-color: var(--color-dark-card);
+  border: 1px solid rgba(212, 175, 55, 0.1);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.theme-card:hover {
+  border-color: rgba(212, 175, 55, 0.3);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.7);
+}
+
+/* Keeping glass-card for backward compatibility but mapping it to dark theme */
+.glass-card {
+  background-color: var(--color-dark-card);
+  border: 1px solid rgba(255, 255, 255, 0.05); /* Subtle white border for general cards */
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+}
+
+.btn-primary {
+  background-color: var(--color-gold);
+  color: #000000;
+  font-weight: 600;
+  padding: 0.6rem 1.2rem;
+  border-radius: 0.375rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-gold-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-outline {
+  background-color: transparent;
+  border: 1px solid var(--color-gold);
+  color: var(--color-gold);
+  font-weight: 500;
+  padding: 0.6rem 1.2rem;
+  border-radius: 0.375rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.btn-outline:hover {
+  background-color: rgba(212, 175, 55, 0.1);
+}
+
+.input-field {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: #27272A;
+  border: 1px solid #3F3F46;
+  color: white;
+  border-radius: 0.5rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.input-field:focus {
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 1px var(--color-gold);
+}
+
+.input-field::placeholder {
+  color: #71717A;
+}

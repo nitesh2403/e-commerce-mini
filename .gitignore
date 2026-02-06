@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.env
+db.sqlite3
+*.log
+
+# React / Node
+node_modules/
+dist/
+build/
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Text files from instructions (optional, but good to keep repo clean)
+MODULE WIS IMPLEMENTATION.txt
