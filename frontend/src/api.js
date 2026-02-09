@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:8000/api/",
+  baseURL: "https://e-commerce-mini-uyv4.onrender.com/api/",
   headers: {
     "Content-Type": "application/json",
   },
@@ -33,7 +33,7 @@ api.interceptors.response.use(
         try {
           // We use axios directly here to avoid interceptor loop
           const response = await axios.post(
-            "http://localhost:8000/api/users/token/refresh/",
+            "https://e-commerce-mini-uyv4.onrender.com/api/users/token/refresh/",
             {
               refresh: refreshToken,
             },
