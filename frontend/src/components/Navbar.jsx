@@ -124,6 +124,12 @@ const Navbar = () => {
                       My Orders
                     </Link>
                     <Link
+                      to="/wishlist"
+                      className="text-gray-300 hover:text-[#D4AF37] font-medium transition-colors"
+                    >
+                      Wishlist
+                    </Link>
+                    <Link
                       to="/cart"
                       className="flex items-center text-gray-300 hover:text-[#D4AF37] font-medium transition-colors relative"
                     >

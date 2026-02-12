@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import api from "../api";
 import { useCart } from "../context/CartContext";
+import Toast from "../components/Toast";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -9,6 +10,13 @@ const ProductDetail = () => {
   const [isInWishlist, setIsInWishlist] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
   const { fetchCartCount } = useCart();
+
+  // Toast State
+  const [toast, setToast] = useState(null);
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+  };
+  const closeToast = () => setToast(null);
 
   useEffect(() => {
     fetchProduct();
@@ -36,28 +44,35 @@ const ProductDetail = () => {
   const addToCart = async () => {
     try {
       await api.post("cart/add/", { product_id: product.id, quantity: 1 });
-      setAddedProductId(productId);
       fetchCartCount();
       setIsAdded(true);
+      showToast("Added to Cart!", "success");
       setTimeout(() => setIsAdded(false), 2000);
     } catch (error) {
       if (error.response && error.response.status === 401) {
-        alert("Please login to add items to cart");
+        showToast("Please login to add items to cart", "error");
       } else {
         console.error("Error adding to cart:", error);
+        showToast("Failed to add to cart", "error");
       }
     }
   };
 
   const toggleWishlist = async () => {
     try {
-      await api.post("wishlist/toggle/", { product_id: product.id });
+      const response = await api.post("wishlist/toggle/", { product_id: product.id });
       setIsInWishlist(!isInWishlist);
+      if (response.data.status === 'added') {
+          showToast("Added to Wishlist", "success");
+      } else {
+          showToast("Removed from Wishlist", "info");
+      }
     } catch (error) {
       if (error.response && error.response.status === 401) {
-        alert("Please login to use Wishlist");
+        showToast("Please login to use Wishlist", "error");
       } else {
         console.error("Error toggling wishlist:", error);
+        showToast("Failed to update wishlist", "error");
       }
     }
   };
@@ -72,6 +87,13 @@ const ProductDetail = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={closeToast}
+          />
+      )}
       <Link
         to="/"
         className="text-indigo-600 hover:text-indigo-800 mb-6 inline-block"
