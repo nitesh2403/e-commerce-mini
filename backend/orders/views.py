@@ -25,6 +25,44 @@ class OrderViewSet(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         if not (request.user.is_staff or request.user.role == 'admin'):
             return Response({'error': 'Not authorized to update orders'}, status=status.HTTP_403_FORBIDDEN)
+        
+        # Vendor Specific Logic
+        if request.user.role == 'admin' and not request.user.is_superuser:
+            order = self.get_object()
+            new_status = request.data.get('status')
+            
+            if new_status:
+                with transaction.atomic():
+                    # 1. Update Vendor's Items
+                    vendor_items = order.items.filter(product__created_by=request.user)
+                    vendor_items.update(status=new_status)
+                    
+                    # 2. Update Global Order Status based on ALL items
+                    # Re-fetch all active items to check global state
+                    all_active_items = order.items.exclude(status='cancelled')
+                    
+                    if not all_active_items.exists():
+                         order.status = 'cancelled'
+                    else:
+                        item_statuses = set(item.status for item in all_active_items)
+                        
+                        if 'placed' not in item_statuses and 'shipped' not in item_statuses and 'delivered' in item_statuses:
+                             # All are delivered (and maybe some cancelled, but no placed/shipped)
+                             order.status = 'delivered'
+                        elif 'shipped' in item_statuses or 'delivered' in item_statuses:
+                             # At least one item is moved, so order is shipped
+                             # (Unless all are delivered, which is caught above)
+                             order.status = 'shipped'
+                        else:
+                             # All are placed
+                             order.status = 'placed'
+                    
+                    order.save()
+                    
+            # Return the updated order (serializer will filter items for vendor view)
+            serializer = self.get_serializer(order)
+            return Response(serializer.data)
+
         return super().update(request, *args, **kwargs)
 
 

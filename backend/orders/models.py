@@ -33,7 +33,12 @@ class OrderItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.PROTECT) # Protect product deletion if part of an order
     quantity = models.PositiveIntegerField()
     price_at_purchase = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.CharField(max_length=20, choices=[('placed', 'Placed'), ('cancelled', 'Cancelled')], default='placed')
+    status = models.CharField(max_length=20, choices=[
+        ('placed', 'Placed'),
+        ('shipped', 'Shipped'),
+        ('delivered', 'Delivered'),
+        ('cancelled', 'Cancelled')
+    ], default='placed')
 
     def __str__(self):
         return f"{self.quantity} x {self.product.name}"

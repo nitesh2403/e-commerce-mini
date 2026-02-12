@@ -36,16 +36,9 @@ class OrderSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
         request = self.context.get('request')
 
-        if request and request.user and request.user.role == 'admin':
+        if request and request.user and (request.user.role == 'admin' or request.user.is_staff) and not request.user.is_superuser:
             # Filter items to only show those created by this admin
-            items_data = representation.get('items', [])
-            filtered_items = []
-            vendor_total = 0
-
-            # Access the original data to check product ownership efficiently or rely on serialized data
-            # Since items are already serialized, we iterate them.
-            # Ideally we check the DB objects but serializer output is easier here if product owner info was included.
-            # Let's rely on fetching the OrderItems again or use a simpler check if we trust ID.
+            # Note: is_superuser check prevents filtering for global admins if you have them
             
             # Better approach: Iterate the RelatedManager on the instance to be accurate
             vendor_items = instance.items.filter(product__created_by=request.user)
@@ -57,13 +50,30 @@ class OrderSerializer(serializers.ModelSerializer):
             vendor_total = sum(item.price_at_purchase * item.quantity for item in vendor_items if item.status != 'cancelled')
             representation['total_price'] = vendor_total
 
+            # Calculate Vendor-Specific Status
+            active_items = [i for i in vendor_items if i.status != 'cancelled']
+            
+            if not active_items:
+                # If all items are cancelled (or no items), status is cancelled
+                representation['status'] = 'cancelled'
+            else:
+                item_statuses = set(i.status for i in active_items)
+                
+                if 'delivered' in item_statuses and len(item_statuses) == 1:
+                    # All active items are delivered
+                    representation['status'] = 'delivered'
+                elif 'shipped' in item_statuses or 'delivered' in item_statuses:
+                    # Partial delivery or shipping means shipped (unless all delivered)
+                     representation['status'] = 'shipped'
+                else:
+                    # Default to placed
+                    representation['status'] = 'placed'
+
         # Defensive Check: Ensure total is never negative and 0 if cancelled
-        # This handles legacy data where logic might have subtracted excessively
         if instance.status == 'cancelled':
             representation['total_price'] = 0.00
         elif float(representation.get('total_price', 0)) < 0:
             representation['total_price'] = 0.00
-
 
         return representation
 
