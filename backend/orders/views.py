@@ -143,21 +143,30 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         try:
             with transaction.atomic():
-                # 2. Restore Stock and Mark Items Cancelled
-                for item in order.items.all():
+                # 2. Restore Stock and DELETE Active Items
+                # We iterate a list() because we are modifying the queryset (deleting)
+                for item in list(order.items.all()):
                     if item.status != 'cancelled':
                         product = item.product
                         product.stock_quantity += item.quantity
                         product.save()
-                        item.status = 'cancelled'
-                        item.save()
+                        # DELETE the item instead of marking cancelled (User Request)
+                        item.delete()
+                    # If item was already 'cancelled' (by vendor), we leave it as is
+                    # so the customer knows the vendor cancelled it.
 
-                # 3. Update Status
-                order.status = 'cancelled'
-                order.total_amount = 0 # Ensure total is zero for cancelled orders
-                order.save()
-                
-                return Response({'status': 'Order cancelled successfully'})
+                # 3. Update Status or Delete Order
+                # If all items are gone (meaning no vendor-cancelled items existed), delete order
+                if not order.items.exists():
+                     order.delete()
+                     return Response({'status': 'Order deleted successfully'})
+                else:
+                    # If vendor-cancelled items remain, keep order but mark cancelled
+                    order.status = 'cancelled'
+                    order.total_amount = 0 
+                    order.save()
+                    return Response({'status': 'Order cancelled (active items removed)'})
+                    
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -187,35 +196,17 @@ class OrderViewSet(viewsets.ModelViewSet):
                     item.quantity -= cancel_quantity
                     item.save()
                     
-                    # 2. Update existing Cancelled Item or Create new one
-                    existing_cancelled_item = OrderItem.objects.filter(
-                        order=order,
-                        product=item.product,
-                        status='cancelled',
-                        price_at_purchase=item.price_at_purchase
-                    ).first()
-
-                    if existing_cancelled_item:
-                        existing_cancelled_item.quantity += cancel_quantity
-                        existing_cancelled_item.save()
-                    else:
-                        OrderItem.objects.create(
-                            order=order,
-                            product=item.product,
-                            quantity=cancel_quantity,
-                            price_at_purchase=item.price_at_purchase,
-                            status='cancelled'
-                        )
-                    
-                    # 3. Restore Stock
+                    # 2. Restore Stock
                     product = item.product
                     product.stock_quantity += cancel_quantity
                     product.save()
 
-                    # 4. Update Order Total
+                    # 3. Update Order Total
                     refund_amount = item.price_at_purchase * cancel_quantity
                     order.total_amount = max(0, order.total_amount - refund_amount)
                     order.save()
+                    
+                    # NOTE: We do NOT create a "cancelled" item record for partials (User Request "just remove it")
                     
                     return Response({'status': f'Removed {cancel_quantity} items successfully', 'new_total': order.total_amount})
                 
@@ -231,17 +222,22 @@ class OrderViewSet(viewsets.ModelViewSet):
                     order.total_amount = max(0, order.total_amount - refund_amount)
                     order.save()
 
-                    # 4. Mark Item as Cancelled
-                    item.status = 'cancelled'
-                    item.save()
+                    # 4. DELETE Item (User Request)
+                    item.delete()
 
-                    # 5. Check if Order is fully cancelled
-                    if not order.items.exclude(status='cancelled').exists():
+                    # 5. Check Order State
+                    if not order.items.exists():
+                        # If order is completely empty now, delete it
+                        order.delete()
+                        return Response({'status': 'Item removed. Order deleted as empty.', 'order_cancelled': True})
+                    
+                    elif not order.items.exclude(status='cancelled').exists():
+                        # If only vendor-cancelled items remain
                         order.status = 'cancelled'
                         order.save()
-                        return Response({'status': 'Item cancelled. Order cancelled as all items are cancelled.', 'order_cancelled': True})
+                        return Response({'status': 'Item removed. Order status updated to cancelled.', 'order_cancelled': True})
 
-                    return Response({'status': 'Item cancelled successfully', 'new_total': order.total_amount})
+                    return Response({'status': 'Item removed successfully', 'new_total': order.total_amount})
 
         except OrderItem.DoesNotExist:
              return Response({'error': 'Item not found in this order'}, status=status.HTTP_404_NOT_FOUND)
