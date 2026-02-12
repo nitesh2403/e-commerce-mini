@@ -174,30 +174,11 @@ const MyOrders = () => {
       ) : (
         <div className="space-y-6">
           {orders.map((order) => {
-            // Group cancelled items logic
-            // ... existing grouping logic ...
-            const activeItems = order.items.filter(
-              (i) => i.status !== "cancelled",
-            );
-            const cancelledItems = order.items.filter(
-              (i) => i.status === "cancelled",
-            );
-
-            const groupedCancelled = {};
-            cancelledItems.forEach((item) => {
-              const key = `${item.product}-${item.price_at_purchase}`;
-              if (groupedCancelled[key]) {
-                groupedCancelled[key].quantity += item.quantity;
-              } else {
-                groupedCancelled[key] = { ...item };
-              }
-            });
-
-            const displayItems = [
-              ...activeItems,
-              ...Object.values(groupedCancelled),
-            ];
-
+            // Group cancelled items logic not strictly needed if we just render all items with their status
+            // But let's keep array flattening if it helps layout, though simpler is better.
+            // Actually, the previous logic separated active and cancelled. 
+            // Let's just render `order.items` directly to keep it simple and show status per item.
+            
             return (
               <div key={order.id} className="theme-card overflow-hidden shadow-2xl border border-[#D4AF37]/10 group hover:border-[#D4AF37]/30 transition-all duration-300">
                 <div className="bg-[#1a1a1a]/80 backdrop-blur-sm px-8 py-6 border-b border-[#D4AF37]/20 flex flex-wrap justify-between items-center gap-6">
@@ -222,29 +203,24 @@ const MyOrders = () => {
                    </div>
 
                   <div className="flex items-center gap-6">
-                    {/* Status Badge */}
-                    <div className={`px-4 py-1.5 rounded-full border text-xs font-bold uppercase tracking-widest flex items-center gap-2
-                      ${
-                        order.status === "delivered"
-                          ? "bg-green-900/20 text-green-400 border-green-900/50"
-                          : order.status === "cancelled"
-                            ? "bg-red-900/20 text-red-400 border-red-900/50"
-                            : "bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/30"
-                      }`}>
-                        <span className={`w-2 h-2 rounded-full ${
-                             order.status === "delivered" ? "bg-green-400" :
-                             order.status === "cancelled" ? "bg-red-400" : "bg-[#D4AF37]"
-                        }`}></span>
-                        {order.status}
+                    {/* Overall Order Status (Optional, maybe keep small) */}
+                    <div className="text-right">
+                        <span className="text-xs text-gray-500 uppercase tracking-widest block mb-1">Overall Status</span>
+                        <span className={`text-sm font-bold uppercase tracking-widest ${
+                            order.status === "delivered" ? "text-green-400" :
+                            order.status === "cancelled" ? "text-red-400" : "text-[#D4AF37]"
+                        }`}>
+                            {order.status}
+                        </span>
                     </div>
 
                     {['placed', 'shipped'].includes(order.status) && (
                       <button
                         onClick={() => cancelOrder(order.id)}
-                        className="text-gray-500 hover:text-red-400 text-sm font-medium transition-colors flex items-center gap-1 group-hover:text-red-400"
-                        title="Cancel Order"
+                        className="text-gray-500 hover:text-red-400 text-xs font-medium transition-colors flex items-center gap-1 group-hover:text-red-400"
+                        title="Cancel Entire Order"
                       >
-                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                          <span className="underline decoration-transparent group-hover:decoration-red-400 transition-all">Cancel Order</span>
                       </button>
                     )}
@@ -252,9 +228,9 @@ const MyOrders = () => {
                 </div>
                 <div className="p-6">
                   <div className="space-y-4">
-                    {displayItems.map((item) => (
+                    {order.items.map((item) => (
                       <div
-                        key={item.id || `${item.product}-${item.status}`}
+                        key={item.id}
                         className="flex items-center gap-6 border-b border-[#333] last:border-0 pb-6 last:pb-0"
                       >
                         <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg border border-[#333] bg-black">
@@ -271,39 +247,52 @@ const MyOrders = () => {
                           <h4 className="text-xl font-serif font-bold text-white mb-1 truncate">
                             {item.product_name}
                           </h4>
-                          <p className="text-sm text-gray-400 flex items-center gap-2 mb-2">
-                            <span>Qty: <span className="text-white font-medium">{item.quantity}</span></span>
-                            <span className="w-1 h-1 bg-gray-600 rounded-full"></span>
-                            <span className="text-[#D4AF37]">Sold by {item.vendor_name || "Store"}</span>
-                          </p>
+                          <div className="flex flex-wrap gap-3 items-center mb-2">
+                              {/* Item Status Badge */}
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${
+                                  item.status === 'delivered' ? "bg-green-900/20 text-green-400 border-green-900/50" :
+                                  item.status === 'shipped' ? "bg-yellow-900/20 text-yellow-400 border-yellow-900/50" :
+                                  item.status === 'cancelled' ? "bg-red-900/20 text-red-400 border-red-900/50" :
+                                  "bg-blue-900/20 text-blue-400 border-blue-900/50"
+                              }`}>
+                                  {item.status}
+                              </span>
+                              
+                              <p className="text-sm text-gray-400 flex items-center gap-2">
+                                <span>Qty: <span className="text-white font-medium">{item.quantity}</span></span>
+                                <span className="w-1 h-1 bg-gray-600 rounded-full"></span>
+                                <span className="text-[#D4AF37]">Sold by {item.vendor_name || "Store"}</span>
+                              </p>
+                          </div>
                         </div>
                         <div className="flex flex-col items-end gap-3 min-w-[120px]">
                           <p className="text-xl font-serif font-bold text-[#D4AF37]">
                             ${item.price_at_purchase}
                           </p>
-                          {item.status === "cancelled" ? (
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-red-500 bg-red-900/10 px-2 py-1 rounded border border-red-500/20">
-                              Item Cancelled
-                            </span>
-                          ) : ['placed', 'shipped'].includes(order.status) ? (
-                            <button
-                              onClick={() =>
-                                openRemoveModal(order.id, item)
-                              }
-                              className="text-xs text-gray-500 hover:text-red-400 transition-colors border border-gray-700 hover:border-red-400 px-3 py-1.5 rounded-full"
-                            >
-                              Remove Item
-                            </button>
-                          ) : (
-                            order.status === "delivered" && (
-                              <button
-                                onClick={() => openReportModal(item)}
-                                className="text-xs font-bold text-[#D4AF37] hover:text-[#b5952f] hover:underline px-3 py-1"
-                              >
-                                Returns / Issues
-                              </button>
-                            )
-                          )}
+                          
+                          {/* Item Actions */}
+                          {item.status === 'placed' || item.status === 'shipped' ? (
+                             // Allow removing individual items if not delivered/cancelled
+                             // Note: Backend might restrict cancelling shipped items if order is shipped, 
+                             // but UI should allow user to try if it's legally consistent.
+                             // For now, let's allow removing 'placed' items. 
+                             // If 'shipped', usually can't cancel. Let's restrict to 'placed'.
+                             item.status === 'placed' && (
+                                <button
+                                    onClick={() => openRemoveModal(order.id, item)}
+                                    className="text-xs text-gray-500 hover:text-red-400 transition-colors border border-gray-700 hover:border-red-400 px-3 py-1.5 rounded-full"
+                                >
+                                    Cancel Item
+                                </button>
+                             )
+                          ) : item.status === 'delivered' ? (
+                                <button
+                                    onClick={() => openReportModal(item)}
+                                    className="text-xs font-bold text-[#D4AF37] hover:text-[#b5952f] hover:underline px-3 py-1"
+                                >
+                                    Returns / Issues
+                                </button>
+                          ) : null}
                         </div>
                       </div>
                     ))}
