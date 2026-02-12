@@ -174,11 +174,12 @@ const MyOrders = () => {
       ) : (
         <div className="space-y-6">
           {orders.map((order) => {
-            // Group cancelled items logic not strictly needed if we just render all items with their status
-            // But let's keep array flattening if it helps layout, though simpler is better.
-            // Actually, the previous logic separated active and cancelled. 
-            // Let's just render `order.items` directly to keep it simple and show status per item.
+            // Filter out cancelled items completely as per user request
+            const visibleItems = order.items.filter(item => item.status !== 'cancelled');
             
+            // If order has no visible items (all cancelled), don't show the order card
+            if (visibleItems.length === 0) return null;
+
             return (
               <div key={order.id} className="theme-card overflow-hidden shadow-2xl border border-[#D4AF37]/10 group hover:border-[#D4AF37]/30 transition-all duration-300">
                 <div className="bg-[#1a1a1a]/80 backdrop-blur-sm px-8 py-6 border-b border-[#D4AF37]/20 flex flex-wrap justify-between items-center gap-6">
@@ -217,7 +218,7 @@ const MyOrders = () => {
                 </div>
                 <div className="p-6">
                   <div className="space-y-4">
-                    {order.items.map((item) => (
+                    {visibleItems.map((item) => (
                       <div
                         key={item.id}
                         className="flex items-center gap-6 border-b border-[#333] last:border-0 pb-6 last:pb-0"
