@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
+import Toast from "../components/Toast";
 
 const ManageInventory = () => {
   const [activeTab, setActiveTab] = useState("products"); // 'products' or 'categories'
@@ -8,6 +9,13 @@ const ManageInventory = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  // Toast State
+  const [toast, setToast] = useState(null);
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+  };
+  const closeToast = () => setToast(null);
 
   // Form States
   const [productForm, setProductForm] = useState({
@@ -19,6 +27,8 @@ const ManageInventory = () => {
     description: "",
     image: null,
   });
+  const [errors, setErrors] = useState({}); // Validation errors
+
   const [categoryForm, setCategoryForm] = useState({
     name: "",
     description: "",
@@ -49,11 +59,35 @@ const ManageInventory = () => {
 
   const [editingProduct, setEditingProduct] = useState(null);
 
+  const validateProductForm = () => {
+    const newErrors = {};
+    if (!productForm.name.trim()) newErrors.name = "Product name is required";
+    if (!productForm.category) newErrors.category = "Category is required";
+    if (!productForm.price) {
+      newErrors.price = "Price is required";
+    } else if (parseFloat(productForm.price) <= 0) {
+      newErrors.price = "Price must be greater than 0";
+    }
+    if (!productForm.stock_quantity) {
+      newErrors.stock_quantity = "Stock quantity is required";
+    } else if (parseInt(productForm.stock_quantity) < 0) {
+      newErrors.stock_quantity = "Stock cannot be negative";
+    }
+    if (!productForm.description.trim()) newErrors.description = "Description is required";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleProductSubmit = async (e) => {
     e.preventDefault();
+    if (!validateProductForm()) {
+        showToast("Please fill in all required fields", "error");
+        return;
+    }
+
     const formData = new FormData();
     formData.append("name", productForm.name);
-    formData.append("category", productForm.category);
     formData.append("category", productForm.category);
     formData.append("price", productForm.price);
     formData.append("discount_percentage", productForm.discount_percentage);
@@ -62,21 +96,19 @@ const ManageInventory = () => {
     if (productForm.image instanceof File) {
       formData.append("image", productForm.image);
     }
-    // Handle image_url field too if provided, though we are hiding it in UI now
-    // Or we just rely on image upload.
 
     try {
       if (editingProduct) {
         await api.patch(`products/${editingProduct.id}/`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        alert("Product Updated!");
+        showToast("Product Updated Successfully!", "success");
         setEditingProduct(null);
       } else {
         await api.post("products/", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        alert("Product Added!");
+        showToast("Product Added Successfully!", "success");
       }
       setProductForm({
         name: "",
@@ -87,10 +119,11 @@ const ManageInventory = () => {
         description: "",
         image: null,
       });
+      setErrors({});
       fetchData();
     } catch (error) {
       console.error("Error saving product:", error);
-      alert("Failed to save product");
+      showToast("Failed to save product. Please try again.", "error");
     }
   };
 
@@ -103,8 +136,9 @@ const ManageInventory = () => {
       discount_percentage: product.discount_percentage || "0",
       stock_quantity: product.stock_quantity,
       description: product.description,
-      image: null, // We don't load the file object back
+      image: null, 
     });
+    setErrors({});
     window.scrollTo(0, 0);
   };
 
@@ -113,25 +147,27 @@ const ManageInventory = () => {
     setProductForm({
       name: "",
       category: "",
-      category: "",
       price: "",
       discount_percentage: "0",
       stock_quantity: "",
       description: "",
       image: null,
     });
+    setErrors({});
   };
 
   const handleCategorySubmit = async (e) => {
     e.preventDefault();
+    if (!categoryForm.name.trim()) return;
+
     try {
       await api.post("categories/", categoryForm);
-      alert("Category Added!");
+      showToast("Category Added Successfully!", "success");
       setCategoryForm({ name: "", description: "" });
       fetchData();
     } catch (error) {
       console.error("Error adding category:", error);
-      alert("Failed to add category");
+      showToast("Failed to add category", "error");
     }
   };
 
@@ -139,9 +175,11 @@ const ManageInventory = () => {
     if (!window.confirm("Are you sure?")) return;
     try {
       await api.delete(`products/${id}/`);
+      showToast("Product Deleted!", "info");
       fetchData();
     } catch (error) {
       console.error("Error deleting product:", error);
+      showToast("Failed to delete product", "error");
     }
   };
 
@@ -150,17 +188,27 @@ const ManageInventory = () => {
       return;
     try {
       await api.delete(`categories/${id}/`);
+      showToast("Category Deleted!", "info");
       fetchData();
     } catch (error) {
       console.error("Error deleting category:", error);
+      showToast("Failed to delete category", "error");
     }
   };
 
   if (loading)
-    return <div className="p-8 text-center">Loading inventory...</div>;
+    return <div className="p-8 text-center text-white">Loading inventory...</div>;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={closeToast}
+          />
+      )}
+
       <h1 className="text-3xl font-serif font-bold text-white mb-8">
         Manage Inventory
       </h1>
@@ -188,84 +236,102 @@ const ManageInventory = () => {
               <h2 className="text-xl font-serif font-bold text-white mb-4">
                 {editingProduct ? "Edit Product" : "Add New Product"}
               </h2>
-              <form onSubmit={handleProductSubmit} className="space-y-4">
-                <input
-                  type="text"
-                  placeholder="Product Name"
-                  className="input-field"
-                  value={productForm.name}
-                  onChange={(e) =>
-                    setProductForm({ ...productForm, name: e.target.value })
-                  }
-                  required
-                />
-                <select
-                  className="input-field"
-                  value={productForm.category}
-                  onChange={(e) =>
-                    setProductForm({ ...productForm, category: e.target.value })
-                  }
-                  required
-                >
-                  <option value="">Select Category</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-                <div className="grid grid-cols-2 gap-4">
-                  <input
-                    type="number"
-                    placeholder="Price"
-                    className="input-field"
-                    value={productForm.price}
-                    onChange={(e) =>
-                      setProductForm({ ...productForm, price: e.target.value })
-                    }
-                    required
-                  />
-                  <input
-                    type="number"
-                    placeholder="Discount %"
-                    className="input-field"
-                    value={productForm.discount_percentage}
-                    onChange={(e) =>
-                      setProductForm({
-                        ...productForm,
-                        discount_percentage: e.target.value,
-                      })
-                    }
-                    min="0"
-                    max="100"
-                    step="0.01"
-                  />
+              <form onSubmit={handleProductSubmit} className="space-y-4" noValidate>
+                <div>
+                    <input
+                      type="text"
+                      placeholder="Product Name"
+                      className={`input-field ${errors.name ? 'border-red-500 focus:border-red-500' : ''}`}
+                      value={productForm.name}
+                      onChange={(e) =>
+                        setProductForm({ ...productForm, name: e.target.value })
+                      }
+                    />
+                    {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
                 </div>
-                <input
-                    type="number"
-                    placeholder="Stock Quantity"
-                    className="input-field"
-                    value={productForm.stock_quantity}
-                    onChange={(e) =>
-                      setProductForm({
-                        ...productForm,
-                        stock_quantity: e.target.value,
-                      })
-                    }
-                    required
-                  />
-                <textarea
-                  placeholder="Description"
-                  className="input-field"
-                  rows="3"
-                  value={productForm.description}
-                  onChange={(e) =>
-                    setProductForm({
-                      ...productForm,
-                      description: e.target.value,
-                    })
-                  }
-                ></textarea>
+                
+                <div>
+                    <select
+                      className={`input-field ${errors.category ? 'border-red-500 focus:border-red-500' : ''}`}
+                      value={productForm.category}
+                      onChange={(e) =>
+                        setProductForm({ ...productForm, category: e.target.value })
+                      }
+                    >
+                      <option value="">Select Category</option>
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category}</p>}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                      <input
+                        type="number"
+                        placeholder="Price"
+                        className={`input-field ${errors.price ? 'border-red-500 focus:border-red-500' : ''}`}
+                        value={productForm.price}
+                        onChange={(e) =>
+                          setProductForm({ ...productForm, price: e.target.value })
+                        }
+                      />
+                      {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price}</p>}
+                  </div>
+                  <div>
+                      <input
+                        type="number"
+                        placeholder="Discount %"
+                        className="input-field"
+                        value={productForm.discount_percentage}
+                        onChange={(e) =>
+                          setProductForm({
+                            ...productForm,
+                            discount_percentage: e.target.value,
+                          })
+                        }
+                        min="0"
+                        max="100"
+                        step="0.01"
+                      />
+                  </div>
+                </div>
+
+                <div>
+                    <input
+                        type="number"
+                        placeholder="Stock Quantity"
+                        className={`input-field ${errors.stock_quantity ? 'border-red-500 focus:border-red-500' : ''}`}
+                        value={productForm.stock_quantity}
+                        onChange={(e) =>
+                          setProductForm({
+                            ...productForm,
+                            stock_quantity: e.target.value,
+                          })
+                        }
+                      />
+                    {errors.stock_quantity && <p className="text-red-500 text-xs mt-1">{errors.stock_quantity}</p>}
+                </div>
+
+                <div>
+                    <textarea
+                      placeholder="Description"
+                      className={`input-field ${errors.description ? 'border-red-500 focus:border-red-500' : ''}`}
+                      rows="3"
+                      value={productForm.description}
+                      onChange={(e) =>
+                        setProductForm({
+                          ...productForm,
+                          description: e.target.value,
+                        })
+                      }
+                    ></textarea>
+                    {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
+                </div>
+
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-400 mb-1">
                     Product Image
