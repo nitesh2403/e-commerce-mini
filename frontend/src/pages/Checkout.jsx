@@ -199,7 +199,9 @@ const Checkout = () => {
                 >
                   <img
                     src={
-                      item.product.image_url || "https://via.placeholder.com/80"
+                      item.product.image ||
+                      item.product.image_url ||
+                      "https://via.placeholder.com/80"
                     }
                     alt={item.product.name}
                     className="w-16 h-16 object-cover rounded-md"
