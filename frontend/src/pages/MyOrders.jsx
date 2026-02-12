@@ -203,17 +203,6 @@ const MyOrders = () => {
                    </div>
 
                   <div className="flex items-center gap-6">
-                    {/* Overall Order Status (Optional, maybe keep small) */}
-                    <div className="text-right">
-                        <span className="text-xs text-gray-500 uppercase tracking-widest block mb-1">Overall Status</span>
-                        <span className={`text-sm font-bold uppercase tracking-widest ${
-                            order.status === "delivered" ? "text-green-400" :
-                            order.status === "cancelled" ? "text-red-400" : "text-[#D4AF37]"
-                        }`}>
-                            {order.status}
-                        </span>
-                    </div>
-
                     {['placed', 'shipped'].includes(order.status) && (
                       <button
                         onClick={() => cancelOrder(order.id)}
@@ -271,20 +260,13 @@ const MyOrders = () => {
                           </p>
                           
                           {/* Item Actions */}
-                          {item.status === 'placed' || item.status === 'shipped' ? (
-                             // Allow removing individual items if not delivered/cancelled
-                             // Note: Backend might restrict cancelling shipped items if order is shipped, 
-                             // but UI should allow user to try if it's legally consistent.
-                             // For now, let's allow removing 'placed' items. 
-                             // If 'shipped', usually can't cancel. Let's restrict to 'placed'.
-                             item.status === 'placed' && (
+                          {['placed', 'shipped'].includes(item.status) ? (
                                 <button
                                     onClick={() => openRemoveModal(order.id, item)}
                                     className="text-xs text-gray-500 hover:text-red-400 transition-colors border border-gray-700 hover:border-red-400 px-3 py-1.5 rounded-full"
                                 >
                                     Cancel Item
                                 </button>
-                             )
                           ) : item.status === 'delivered' ? (
                                 <button
                                     onClick={() => openReportModal(item)}
