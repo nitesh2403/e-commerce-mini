@@ -89,10 +89,11 @@ WSGI_APPLICATION = 'ecommerce_api.wsgi.application'
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+
 
 DATABASES = {
     'default': dj_database_url.config(
@@ -100,6 +101,10 @@ DATABASES = {
         conn_max_age=600
     )
 }
+
+# Fix for mssql-django with dj-database-url
+if DATABASES['default']['ENGINE'] == 'sql_server.pyodbc':
+    DATABASES['default']['ENGINE'] = 'mssql'
 
 
 # Password validation

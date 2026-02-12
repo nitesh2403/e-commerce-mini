@@ -174,8 +174,8 @@ const MyOrders = () => {
       ) : (
         <div className="space-y-6">
           {orders.map((order) => {
-            // Filter out cancelled items completely as per user request
-            const visibleItems = order.items.filter(item => item.status !== 'cancelled');
+            // Show all items, including cancelled ones (User Request)
+            const visibleItems = order.items;
             
             // If order has no visible items (all cancelled), don't show the order card
             if (visibleItems.length === 0) return null;
