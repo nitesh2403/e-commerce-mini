@@ -33,8 +33,8 @@ class OrderViewSet(viewsets.ModelViewSet):
             
             if new_status:
                 with transaction.atomic():
-                    # 1. Update Vendor's Items
-                    vendor_items = order.items.filter(product__created_by=request.user)
+                    # 1. Update Vendor's Items (excluding cancelled ones)
+                    vendor_items = order.items.filter(product__created_by=request.user).exclude(status='cancelled')
                     vendor_items.update(status=new_status)
                     
                     # 2. Update Global Order Status based on ALL items
