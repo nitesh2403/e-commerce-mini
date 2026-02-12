@@ -43,8 +43,9 @@ class OrderSerializer(serializers.ModelSerializer):
             # Better approach: Iterate the RelatedManager on the instance to be accurate
             vendor_items = instance.items.filter(product__created_by=request.user)
             
-            # Re-serialize these specific items
-            representation['items'] = OrderItemSerializer(vendor_items, many=True, context=self.context).data
+            # Re-serialize these specific items (excluding cancelled ones as per user request)
+            active_vendor_items = vendor_items.exclude(status='cancelled')
+            representation['items'] = OrderItemSerializer(active_vendor_items, many=True, context=self.context).data
             
             # Recalculate total for this vendor's view
             vendor_total = sum(item.price_at_purchase * item.quantity for item in vendor_items if item.status != 'cancelled')
