@@ -376,7 +376,7 @@ const ManageInventory = () => {
             {products.map((product) => (
               <div
                 key={product.id}
-                className="theme-card p-4 flex items-center gap-4 border border-[#333] hover:border-[#D4AF37]/20"
+                className="theme-card p-4 flex flex-col sm:flex-row sm:items-center gap-4 border border-[#333] hover:border-[#D4AF37]/20"
               >
                 <img
                   src={
@@ -385,7 +385,7 @@ const ManageInventory = () => {
                     "https://via.placeholder.com/50"
                   }
                   alt={product.name}
-                  className="w-16 h-16 object-cover rounded-md"
+                  className="w-full sm:w-16 h-48 sm:h-16 object-cover rounded-md"
                 />
                 <div className="flex-1">
                   <h3 className="font-serif font-medium text-white">{product.name}</h3>
@@ -393,18 +393,20 @@ const ManageInventory = () => {
                     Stock: <span className={product.stock_quantity < 5 ? "text-red-500 font-bold" : ""}>{product.stock_quantity}</span> | <span className="text-[#D4AF37]">${product.price}</span>
                   </p>
                 </div>
-                <button
-                  onClick={() => handleEditProduct(product)}
-                  className="text-[#D4AF37] hover:text-[#b5952f] font-medium px-3 py-1 border border-[#D4AF37]/30 hover:bg-[#D4AF37]/10 rounded-sm mr-2 transition-colors"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDeleteProduct(product.id)}
-                  className="text-red-500 hover:text-red-400 font-medium px-3 py-1 border border-red-900 hover:bg-red-900/20 rounded-sm transition-colors"
-                >
-                  Delete
-                </button>
+                <div className="flex gap-2 mt-2 sm:mt-0">
+                    <button
+                      onClick={() => handleEditProduct(product)}
+                      className="flex-1 sm:flex-none text-center text-[#D4AF37] hover:text-[#b5952f] font-medium px-3 py-1 border border-[#D4AF37]/30 hover:bg-[#D4AF37]/10 rounded-sm transition-colors"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteProduct(product.id)}
+                      className="flex-1 sm:flex-none text-center text-red-500 hover:text-red-400 font-medium px-3 py-1 border border-red-900 hover:bg-red-900/20 rounded-sm transition-colors"
+                    >
+                      Delete
+                    </button>
+                </div>
               </div>
             ))}
           </div>

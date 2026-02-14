@@ -97,9 +97,9 @@ const Cart = () => {
           {cart.items.map((item) => (
             <div
               key={item.id}
-              className="theme-card p-4 flex items-center gap-4"
+              className="theme-card p-4 flex flex-col sm:flex-row sm:items-center gap-4"
             >
-              <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+              <div className="w-full sm:w-24 h-24 shrink-0 rounded-lg overflow-hidden bg-gray-100">
                 <img
                   src={
                     item.product.image || item.product.image_url || "https://via.placeholder.com/150"
@@ -108,7 +108,7 @@ const Cart = () => {
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="flex-1">
+              <div className="flex-1 w-full">
                 <h3 className="text-lg font-serif font-bold text-white">
                   {item.product.name}
                 </h3>
@@ -126,7 +126,7 @@ const Cart = () => {
                     )}
                 </div>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center justify-between w-full sm:w-auto gap-4 mt-2 sm:mt-0">
                 <div className="flex items-center border border-[#333] rounded-lg">
                   <button
                     onClick={() => updateQuantity(item.id, item.quantity - 1)}
@@ -142,14 +142,19 @@ const Cart = () => {
                     +
                   </button>
                 </div>
-                <button
-                  onClick={() => removeItem(item.id)}
-                  className="text-gray-500 hover:text-red-500 p-2 transition-colors"
-                >
-                  Remove
-                </button>
+                <div className="flex items-center gap-4">
+                     <div className="text-right font-serif font-bold text-lg text-[#D4AF37] sm:hidden">
+                        ${item.subtotal.toFixed(2)}
+                      </div>
+                    <button
+                      onClick={() => removeItem(item.id)}
+                      className="text-gray-500 hover:text-red-500 p-2 transition-colors"
+                    >
+                      Remove
+                    </button>
+                </div>
               </div>
-              <div className="w-24 text-right font-serif font-bold text-lg text-[#D4AF37]">
+              <div className="hidden sm:block w-24 text-right font-serif font-bold text-lg text-[#D4AF37]">
                 ${item.subtotal.toFixed(2)}
               </div>
             </div>

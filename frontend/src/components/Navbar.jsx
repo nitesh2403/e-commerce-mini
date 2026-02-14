@@ -8,6 +8,7 @@ const Navbar = () => {
   const { cartCount } = useCart();
   const [notifications, setNotifications] = React.useState([]);
   const [showNotifications, setShowNotifications] = React.useState(false);
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   React.useEffect(() => {
@@ -63,6 +64,10 @@ const Navbar = () => {
     navigate("/login");
   };
 
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
   return (
     <nav className="bg-[#0c0c0c] border-b border-[#333] sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -79,7 +84,25 @@ const Navbar = () => {
               SHOPMINI
             </Link>
           </div>
-          <div className="flex items-center space-x-6">
+          
+          {/* Mobile menu button */}
+          <div className="flex items-center md:hidden">
+            <button
+              onClick={toggleMenu}
+              className="text-gray-300 hover:text-white focus:outline-none focus:text-white"
+            >
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                {isMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
+          </div>
+
+          {/* Desktop Menu */}
+          <div className="hidden md:flex items-center space-x-6">
             {!token ? (
               <>
                 <Link
@@ -246,6 +269,137 @@ const Navbar = () => {
           </div>
         </div>
       </div>
+
+      {/* Mobile Menu */}
+      {isMenuOpen && (
+        <div className="md:hidden bg-[#0c0c0c] border-b border-[#333]">
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            {!token ? (
+              <>
+                <Link
+                  to="/login"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-[#D4AF37] hover:text-white hover:bg-gray-700"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Sign Up
+                </Link>
+              </>
+            ) : (
+              <>
+                {localStorage.getItem("role") === "admin" ? (
+                  <>
+                    <Link
+                      to="/admin-dashboard"
+                      className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Orders
+                    </Link>
+                    <Link
+                      to="/admin-reports"
+                      className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Reports
+                    </Link>
+                    <Link
+                      to="/admin-inventory"
+                      className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Inventory
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/my-orders"
+                      className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      My Orders
+                    </Link>
+                    <Link
+                      to="/wishlist"
+                      className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Wishlist
+                    </Link>
+                    <Link
+                      to="/cart"
+                      className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Cart ({cartCount})
+                    </Link>
+                  </>
+                )}
+                
+                {/* Mobile Notification Link */}
+                 <div 
+                    onClick={() => {
+                        setShowNotifications(!showNotifications);
+                        // Optional: close menu or keep it for notification viewing
+                    }}
+                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700 cursor-pointer"
+                >
+                    Notifications {unreadCount > 0 && `(${unreadCount})`}
+                    {/* Mobile Notification Dropdown would need to be handled carefully here, simpler to just show count */}
+                    {showNotifications && (
+                        <div className="mt-2 bg-[#1a1a1a] rounded-lg p-2 max-h-60 overflow-y-auto">
+                            {notifications.length > 0 ? (
+                                notifications.map(n => (
+                                    <div 
+                                        key={n.id} 
+                                        onClick={(e) => {
+                                             e.stopPropagation();
+                                            if (!n.is_read) markRead(n.id);
+                                            if (n.action_link) {
+                                                navigate(n.action_link);
+                                                setIsMenuOpen(false);
+                                            }
+                                        }}
+                                        className={`p-2 border-b border-[#333] last:border-0 ${!n.is_read ? 'text-[#D4AF37]' : 'text-gray-400'}`}
+                                    >
+                                        {n.message}
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="text-gray-500 text-sm p-2">No notifications</div>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                <Link
+                  to="/profile"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Profile
+                </Link>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setIsMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-500 hover:text-red-400 hover:bg-gray-700"
+                >
+                  Logout
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </nav>
   );
 };

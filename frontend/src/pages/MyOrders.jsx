@@ -221,7 +221,7 @@ const MyOrders = () => {
                     {visibleItems.map((item) => (
                       <div
                         key={item.id}
-                        className="flex items-center gap-6 border-b border-[#333] last:border-0 pb-6 last:pb-0"
+                        className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 border-b border-[#333] last:border-0 pb-6 last:pb-0"
                       >
                         <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg border border-[#333] bg-black">
                           <img
@@ -233,7 +233,7 @@ const MyOrders = () => {
                             className="h-full w-full object-cover object-center opacity-90 group-hover:opacity-100 transition-opacity"
                           />
                         </div>
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0 w-full">
                           <h4 className="text-xl font-serif font-bold text-white mb-1 truncate">
                             {item.product_name}
                           </h4>
@@ -255,7 +255,7 @@ const MyOrders = () => {
                               </p>
                           </div>
                         </div>
-                        <div className="flex flex-col items-end gap-3 min-w-[120px]">
+                        <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-3 w-full sm:w-auto min-w-[120px]">
                           <p className="text-xl font-serif font-bold text-[#D4AF37]">
                             ${item.price_at_purchase}
                           </p>
